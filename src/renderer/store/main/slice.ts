@@ -1,17 +1,17 @@
-import { BackIn, BackInit, ComponentStatus, GameOfTheDay } from '@shared/back/types';
-import { PlatformAppPathSuggestions } from '@shared/curate/types';
-import { DialogField, DialogState, Game, GameData, Playlist, PlaylistGame, ViewGame } from 'flashpoint-launcher';
-import { GamePropSuggestions, IService, WindowIPC } from '@shared/interfaces';
-import { ExtensionContribution, IExtensionDescription, ILogoSet } from '@shared/extensions/interfaces';
-import { ITheme } from '@shared/ThemeFile';
-import { UpgradeStage } from '@renderer/upgrade/types';
-import { CreditsData } from '@renderer/credits/types';
-import { createLangContainer, LangContainer, LangFile } from '@shared/lang';
-import { UpdateInfo } from 'electron-updater';
-import { AppExtConfigData } from '@shared/config/interfaces';
-import * as axiosImport from 'axios';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { CreditsData } from '@renderer/credits/types';
+import { UpgradeStage } from '@renderer/upgrade/types';
+import { BackIn, BackInit, ComponentStatus, GameOfTheDay } from '@shared/back/types';
+import { AppExtConfigData } from '@shared/config/interfaces';
+import { PlatformAppPathSuggestions } from '@shared/curate/types';
+import { ExtensionContribution, IExtensionDescription, ILogoSet } from '@shared/extensions/interfaces';
+import { GamePropSuggestions, IService, WindowIPC } from '@shared/interfaces';
+import { createLangContainer, LangContainer, LangFile } from '@shared/lang';
+import { ITheme } from '@shared/ThemeFile';
+import * as axiosImport from 'axios';
 import { ipcRenderer } from 'electron';
+import { UpdateInfo } from 'electron-updater';
+import { DialogField, DialogState, DownloaderState, DownloaderStatus, DownloadTask, DownloadWorkerState, Game, GameData, Playlist, PlaylistGame, ViewGame } from 'flashpoint-launcher';
 
 export const RANDOM_GAME_ROW_COUNT = 6;
 
@@ -29,6 +29,12 @@ export type UpdateDialogFieldActionData = {
   id: string;
   field: Partial<DialogField>;
 }
+
+export type UpdateDownloaderTaskAction = DownloadTask;
+
+export type UpdateDownloaderStateAction = DownloaderStatus;
+
+export type UpdateDownloadWorkerAction = DownloadWorkerState;
 
 export type ResolveDialogActionData = {
   id: string;
@@ -98,6 +104,7 @@ export type MainState = {
   extConfig: AppExtConfigData;
   /** Services */
   services: IService[];
+  downloaderState: DownloaderState;
   /** PLACEHOLDER - Download percent of Game */
   downloadPercent: number;
   downloadSize: number;
@@ -184,6 +191,11 @@ const initialState: MainState = {
   contextButtons: [],
   curationTemplates: [],
   services: [],
+  downloaderState: {
+    state: 'running',
+    workers: [],
+    tasks: {}
+  },
   downloadOpen: false,
   downloadPercent: 0,
   downloadSize: 0,
@@ -330,6 +342,20 @@ const mainSlice = createSlice({
         }
       }
     },
+    updateDownloaderTask(state: MainState, { payload }: PayloadAction<UpdateDownloaderTaskAction>) {
+      state.downloaderState.tasks[payload.game.id] = payload;
+    },
+    updateDownloaderStatus(state: MainState, { payload }: PayloadAction<UpdateDownloaderStateAction>) {
+      state.downloaderState.state = payload;
+    },
+    updateDownloaderWorker(state: MainState, { payload }: PayloadAction<UpdateDownloadWorkerAction>) {
+      const workerIdx = state.downloaderState.workers.findIndex(w => w.id === payload.id);
+      if (workerIdx > -1) {
+        state.downloaderState.workers[workerIdx] = payload;
+      } else {
+        state.downloaderState.workers.push(payload);
+      }
+    },
     setUpdateInfo(state: MainState, { payload }: PayloadAction<number>) {
       state.metadataUpdate = {
         ready: true,
@@ -355,6 +381,9 @@ export const { setMainState,
   updateDialog,
   updateDialogField,
   removePlaylistGame,
+  updateDownloaderTask,
+  updateDownloaderStatus,
+  updateDownloaderWorker,
   setUpdateInfo } = mainSlice.actions;
 export default mainSlice.reducer;
 

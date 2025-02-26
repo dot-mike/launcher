@@ -605,6 +605,7 @@ const langTemplate = {
     'exportPlaylist',
     'makeCurationFromGame',
     'copyShortcutURL',
+    'downloadPlaylistContent',
   ] as const,
   dialog: [
     'programNotFound',

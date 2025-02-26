@@ -1221,6 +1221,30 @@ declare module 'flashpoint-launcher' {
       newState: ProcessState;
     };
 
+    type DownloaderStatus = 'running' | 'stopped';
+
+    type DownloadTaskStatus = 'waiting' | 'in_progress' | 'success' | 'failure';
+
+    type DownloadWorkerState = {
+      id: number;
+      step: number;
+      totalSteps: number;
+      stepProgress: number;
+      text: string;
+    }
+    
+    type DownloadTask = {
+      status: DownloadTaskStatus;
+      game: Game;
+      errors: string[];
+    }
+
+    type DownloaderState = {
+      tasks: Record<string, DownloadTask>;
+      workers: DownloadWorkerState[];
+      state: DownloaderStatus;
+    }
+
     interface ManagedChildProcess {
       /** Fires whenever the status of a process changes. */
       on(event: 'change', listener: (newState: ProcessState) => void): this;

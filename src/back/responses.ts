@@ -44,6 +44,7 @@ import { execSync } from 'child_process';
 import {
   ConfigSchema,
   CurationState,
+  DownloadTask,
   Game,
   GameData,
   GameLaunchInfo,
@@ -123,6 +124,7 @@ import {
 } from './util/misc';
 import { uuid } from './util/uuid';
 import { axios } from './dns';
+import { Downloader } from './Downloader';
 
 /**
  * Register all request callbacks to the socket server.
@@ -860,6 +862,93 @@ export function registerRequestCallbacks(state: BackState, init: () => Promise<v
 
   state.socketServer.register(BackIn.DUPLICATE_PLAYLIST, async (event, playlistId) => {
     await duplicatePlaylist(state, playlistId);
+  });
+
+  state.socketServer.register(BackIn.DOWNLOAD_PLAYLIST_CONTENTS, async (event, playlistId) => {
+    const playlist = state.playlists.find(p => p.id === playlistId);
+    if (playlist) {
+      // Create a downloader for it
+      const downloader = new Downloader(
+        state.config.flashpointPath,
+        state.preferences.dataPacksFolderPath,
+        state.preferences.imageFolderPath,
+        state.preferences.onDemandBaseUrl,
+        state.preferences.gameDataSources,
+        state,
+        4
+      );
+      log.info('Downloads', 'Adding playlist to downloader with ' + playlist.games.length + ' games');
+      const taskId = uuid();
+      await state.socketServer.request(event.client, BackOut.CREATE_TASK, {
+        id: taskId,
+        name: `Downloading Playlist ${playlist.title}`,
+        progress: 0,
+        status: 'Creating Downloader...',
+        finished: false,
+      });
+
+      downloader.stop();
+      let total = 0;
+      for (const { gameId } of playlist.games) {
+        try {
+          const game = await fpDatabase.findGame(gameId);
+          if (game) {
+            log.info('Downloads', 'Adding game ' + game.id);
+            if (downloader.addTask(game)) {
+              total += 1;
+            }
+          }
+        } catch (e) {
+          console.error('bad game get');
+          console.error(e);
+        }
+      }
+
+      state.socketServer.broadcast(BackOut.UPDATE_TASK, {
+        id: taskId,
+        status: `Completed: ${0} / ${total}`,
+      });
+      let completed = 0;
+      let errors: string[] = [];
+      const watcherCb = (task: DownloadTask) => {
+        if (task.status !== 'waiting' && task.status !== 'in_progress') {
+          completed += 1;
+          if (task.status === 'failure') {
+            log.error('Downloader', `Game download failed (${task.game.title}): ${task.errors.join('\n')}`);
+            errors = errors.concat(task.errors);
+          }
+        }
+        state.socketServer.broadcast(BackOut.UPDATE_TASK, {
+          id: taskId,
+          status: `Completed: ${completed} / ${total}`,
+          progress: completed / total,
+        });
+        if (completed === total) {
+          // Finished, unregister itself
+          if (errors.length > 0) {
+            state.socketServer.broadcast(BackOut.UPDATE_TASK, {
+              id: taskId,
+              finished: true,
+              status: `Completed with ${errors.length} errors.`,
+              error: errors.join('\n'),
+            });
+          } else {
+            state.socketServer.broadcast(BackOut.UPDATE_TASK, {
+              id: taskId,
+              finished: true,
+              status: 'Done',
+            });
+          }
+
+          downloader.off('taskChange', watcherCb);
+          downloader.clear(); // Downloader should discard itself after this loop anyway? Not sure honestly
+        }
+      };
+      downloader.on('taskChange', watcherCb);
+      downloader.start();
+    } else {
+      log.error('Downloads', 'Could not find playlist with id ' + playlistId);
+    }
   });
 
   state.socketServer.register(BackIn.IMPORT_PLAYLIST, async (event, filePath, library) => {

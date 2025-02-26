@@ -14,6 +14,9 @@ import {
   CurationWarnings,
   DialogState,
   DialogStateTemplate,
+  DownloaderStatus,
+  DownloadTask,
+  DownloadWorkerState,
   Game,
   GameConfig,
   GameData,
@@ -75,6 +78,7 @@ export enum BackIn {
   DUPLICATE_PLAYLIST,
   IMPORT_PLAYLIST,
   EXPORT_PLAYLIST,
+  DOWNLOAD_PLAYLIST_CONTENTS,
   GET_PLAYLISTS,
   GET_PLAYLIST,
   SAVE_PLAYLIST,
@@ -275,6 +279,10 @@ export enum BackOut {
   UPDATE_TASK,
   CREATE_TASK,
 
+  UPDATE_DOWNLOADER_TASK,
+  UPDATE_DOWNLOADER_STATUS,
+  UPDATE_DOWNLOADER_STATE_WORKER,
+
   FOCUS_WINDOW,
 
   // Shortcuts
@@ -333,6 +341,7 @@ export type BackInTemplate = SocketTemplate<BackIn, {
   [BackIn.DUPLICATE_PLAYLIST]: (data: string) => void;
   [BackIn.IMPORT_PLAYLIST]: (filePath: string, library?: string) => void;
   [BackIn.EXPORT_PLAYLIST]: (id: string, location: string) => void;
+  [BackIn.DOWNLOAD_PLAYLIST_CONTENTS]: (playlistId: string) => void;
   [BackIn.GET_PLAYLISTS]: () => Playlist[];
   [BackIn.GET_PLAYLIST]: (playlistId: string) => Playlist | undefined;
   [BackIn.SAVE_PLAYLIST]: (playlist: Playlist) => Playlist;
@@ -523,6 +532,10 @@ export type BackOutTemplate = SocketTemplate<BackOut, {
   // Tasks
   [BackOut.UPDATE_TASK]: (task: Partial<Task>) => void;
   [BackOut.CREATE_TASK]: (task: Task) => void;
+
+  [BackOut.UPDATE_DOWNLOADER_TASK]: (task: DownloadTask) => void;
+  [BackOut.UPDATE_DOWNLOADER_STATUS]: (state: DownloaderStatus) => void;
+  [BackOut.UPDATE_DOWNLOADER_STATE_WORKER]: (worker: DownloadWorkerState) => void;
 
   [BackOut.FOCUS_WINDOW]: () => void;
 

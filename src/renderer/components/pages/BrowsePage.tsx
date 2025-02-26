@@ -176,6 +176,7 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
             onExtremeToggle={this.onPlaylistExtremeToggle}
             onKeyDown={this.onPlaylistKeyDown}
             onShowAllClick={this.onLeftSidebarShowAllClick}
+            onDownloadPlaylistContents={this.onDownloadPlaylistContents}
             onDuplicatePlaylist={this.onDuplicatePlaylist}
             onExportPlaylist={(playlistId) => this.onExportPlaylist(strings, playlistId)}
             onContextMenu={this.onPlaylistContextMenuMemo(strings, this.state.isEditingPlaylist, this.props.currentView.selectedPlaylist?.id)} />
@@ -336,6 +337,12 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
           click: () => {
             this.onExportPlaylist(strings, playlistId);
           },
+        }, {
+          label: strings.menu.downloadPlaylistContent,
+          enabled: true,
+          click: () => {
+            this.onDownloadPlaylistContents(playlistId);
+          }
         }];
 
         // Add extension contexts
@@ -706,6 +713,10 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
   onDuplicatePlaylist = (playlistId: string): void => {
     window.Shared.back.send(BackIn.DUPLICATE_PLAYLIST, playlistId);
   };
+
+  onDownloadPlaylistContents = (playlistId: string): void => {
+    window.Shared.back.send(BackIn.DOWNLOAD_PLAYLIST_CONTENTS, playlistId);
+  }
 
   onExportPlaylist = (strings: LangContainer, playlistId: string): void => {
     const playlist = this.props.playlists.find(p => p.id === playlistId);

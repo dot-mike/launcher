@@ -58,7 +58,7 @@ import { isAxiosError } from 'axios';
 import { WithShortcutProps } from '@renderer/store/reactKeybindCompat';
 
 // Hide the right sidebar if the page is inside these paths
-const hiddenRightSidebarPages = [Paths.ABOUT, Paths.CURATE, Paths.CONFIG, Paths.MANUAL, Paths.LOGS, Paths.TAGS, Paths.CATEGORIES];
+const hiddenRightSidebarPages = [Paths.ABOUT, Paths.CURATE, Paths.CONFIG, Paths.MANUAL, Paths.LOGS, Paths.TAGS, Paths.CATEGORIES, Paths.DOWNLOADS];
 
 type AppOwnProps = {};
 
@@ -565,7 +565,7 @@ export class App extends React.Component<AppProps> {
 
     window.Shared.back.register(BackOut.CREATE_TASK, (event, task) => {
       // I don't know why length works with 1, don't change it
-      if (!this.props.main.taskBarOpen && this.props.tasks.length === 1) {
+      if (!this.props.main.taskBarOpen && this.props.tasks.length >= 1) {
         // Show task bar for first task added
         this.props.setMainState({ taskBarOpen: true });
       }
@@ -694,6 +694,18 @@ export class App extends React.Component<AppProps> {
           });
         }
       });
+    });
+
+    window.Shared.back.register(BackOut.UPDATE_DOWNLOADER_TASK, async (event, task) => {
+      this.props.mainActions.updateDownloaderTask(task);
+    });
+
+    window.Shared.back.register(BackOut.UPDATE_DOWNLOADER_STATUS, async (event, status) => {
+      this.props.mainActions.updateDownloaderStatus(status);
+    });
+
+    window.Shared.back.register(BackOut.UPDATE_DOWNLOADER_STATE_WORKER, async (event, workerState) => {
+      this.props.mainActions.updateDownloaderWorker(workerState);
     });
   }
 

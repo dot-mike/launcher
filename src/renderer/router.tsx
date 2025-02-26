@@ -24,6 +24,7 @@ import { ConnectedTagsPage } from './containers/ConnectedTagsPage';
 import { CreditsData } from './credits/types';
 import { RequestState } from '@renderer/store/search/slice';
 import { LoadingPage } from './components/pages/LoadingPage';
+import { DownloadsPage } from './components/pages/Downloads';
 
 export type AppRouterProps = {
   fpfssUser: FpfssUser | null;
@@ -158,6 +159,9 @@ export class AppRouter extends React.Component<AppRouterProps> {
         <PropsRoute
           path={Paths.CATEGORIES}
           component={ConnectedTagCategoriesPage} />
+        <PropsRoute
+          path={Paths.DOWNLOADS}
+          component={DownloadsPage} />
         <PropsRoute
           path={Paths.LOGS}
           component={ConnectedLogsPage} />

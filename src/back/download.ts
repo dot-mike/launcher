@@ -1,5 +1,5 @@
 import { downloadFile } from '@shared/Util';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import { GameData, GameDataSource } from 'flashpoint-launcher';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,8 +9,10 @@ import { PartialGameData } from '@fparchive/flashpoint-archive';
 import { onDidInstallGameData } from './util/events';
 import { getGameDataFilename } from '@shared/utils/misc';
 import { axios } from './dns';
+import { EventQueue } from './util/EventQueue';
 
-export async function downloadGameData(gameDataId: number, dataPacksFolderPath: string, sources: GameDataSource[], abortSignal: AbortSignal, onProgress?: (percent: number) => void, onDetails?: (details: DownloadDetails) => void): Promise<void> {
+export async function downloadGameData(gameDataId: number, dataPacksFolderPath: string, sources: GameDataSource[], abortSignal: AbortSignal,
+  onProgress?: (percent: number) => void, onDetails?: (details: DownloadDetails) => void, databaseQueue?: EventQueue): Promise<void> {
   const gameData = await fpDatabase.findGameDataById(gameDataId);
   const sourceErrors: string[] = [];
   log.debug('Game Launcher', `Checking ${sources.length} Sources for this GameData...`);
@@ -35,7 +37,7 @@ export async function downloadGameData(gameDataId: number, dataPacksFolderPath: 
             } else {
               try {
                 log.debug('Game Launcher', 'Validated game data, importing to games folder');
-                await importGameDataSkipHash(gameData.gameId, tempPath, dataPacksFolderPath, sha256, gameData)
+                await importGameDataSkipHash(gameData.gameId, tempPath, dataPacksFolderPath, sha256, gameData, databaseQueue)
                 .catch((err) => {
                   console.log(`Error importing game data ${err}`);
                   log.error('Launcher', 'Error importing game data ' + err);
@@ -63,7 +65,8 @@ export async function downloadGameData(gameDataId: number, dataPacksFolderPath: 
   }
 }
 
-export async function importGameDataSkipHash(gameId: string, filePath: string, dataPacksFolderPath: string, sha256: string, existingGameData?: GameData): Promise<GameData> {
+export async function importGameDataSkipHash(gameId: string, filePath: string, dataPacksFolderPath: string, sha256: string,
+  existingGameData?: GameData, databaseQueue?: EventQueue): Promise<GameData> {
   await fs.promises.access(filePath, fs.constants.F_OK);
   // Gather basic info
   const stats = await fs.promises.stat(filePath);
@@ -80,7 +83,17 @@ export async function importGameDataSkipHash(gameId: string, filePath: string, d
   if (existingGameData) {
     existingGameData.path = newFilename;
     existingGameData.presentOnDisk = true;
-    return fpDatabase.saveGameData(existingGameData);
+    if (databaseQueue) {
+      return new Promise<GameData>((resolve, reject) => {
+        databaseQueue.push(async () => {
+          try {
+            resolve(await fpDatabase.saveGameData(existingGameData));
+          } catch (err) {
+            reject(err);
+          }
+        })
+      });
+    }
   } else {
     const newGameData: PartialGameData = {
       title: 'Data Pack',
@@ -94,6 +107,25 @@ export async function importGameDataSkipHash(gameId: string, filePath: string, d
       applicationPath: '',
       launchCommand: '',
     };
+    if (databaseQueue) {
+      return new Promise<GameData>((resolve, reject) => {
+        databaseQueue.push(async () => {
+          try {
+            const gameData = await fpDatabase.createGameData(newGameData);
+            const game = await fpDatabase.findGame(gameId);
+            if (game) {
+              game.activeDataId = gameData.id;
+              game.activeDataOnDisk = gameData.presentOnDisk;
+              await fpDatabase.saveGame(game);
+              resolve(gameData);
+            }
+            reject();
+          } catch (err) {
+            reject(err);
+          }
+        })
+      });
+    }
     const gameData = await fpDatabase.createGameData(newGameData);
     const game = await fpDatabase.findGame(gameId);
     if (game) {

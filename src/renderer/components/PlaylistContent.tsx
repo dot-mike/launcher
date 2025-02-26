@@ -20,6 +20,7 @@ export type PlaylistItemContentProps = {
   onDiscard: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onDownloadPlaylistContents: (playlistId: string) => void;
   onDuplicatePlaylist: (playlistId: string) => void;
   onExportPlaylist: (playlistId: string) => void;
 }
@@ -64,6 +65,13 @@ export function PlaylistItemContent(props: PlaylistItemContentProps) {
                 </>
               ) : (
                 <>
+                  {/* Download Button */}
+                  <div
+                    className='playlist-list-content__button playlist-list-content__button--confirm'
+                    title={allStrings.menu.downloadPlaylistContent}
+                    onClick={() => props.onDownloadPlaylistContents(props.playlist.id)}>
+                    <OpenIcon icon='data-transfer-download' />
+                  </div>
                   {/* Duplicate Button */}
                   <div
                     className='playlist-list-content__button playlist-list-content__button--confirm'
