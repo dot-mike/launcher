@@ -83,7 +83,7 @@ export async function importGameDataSkipHash(gameId: string, filePath: string, d
   if (existingGameData) {
     existingGameData.path = newFilename;
     existingGameData.presentOnDisk = true;
-    if (databaseQueue) {
+    if (databaseQueue !== undefined) {
       return new Promise<GameData>((resolve, reject) => {
         databaseQueue.push(async () => {
           try {
@@ -93,6 +93,8 @@ export async function importGameDataSkipHash(gameId: string, filePath: string, d
           }
         })
       });
+    } else {
+      return fpDatabase.saveGameData(existingGameData)
     }
   } else {
     const newGameData: PartialGameData = {
