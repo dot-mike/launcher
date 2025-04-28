@@ -74,6 +74,7 @@ import { formatString } from '@shared/utils/StringFormatter';
 import { awaitDialog } from './util/dialog';
 import { saveCurationFpfssInfo } from './curate/fpfss';
 import { axios } from './dns';
+import { Downloader } from './Downloader';
 
 export const VERBOSE = {
   enabled: false
@@ -106,6 +107,7 @@ const state: BackState = {
     queue: [],
     current: [],
   },
+  downloader: createErrorProxy('downloader'),
   preferences: createErrorProxy('preferences'),
   config: createErrorProxy('config'),
   extConfig: createErrorProxy('extConfig'),
@@ -508,6 +510,17 @@ async function prepForInit(message: any): Promise<void> {
   });
 
   console.log('Back - Initialized Languages');
+
+  // Create downloader instance
+  state.downloader = new Downloader(
+    state.config.flashpointPath,
+    state.preferences.dataPacksFolderPath,
+    state.preferences.imageFolderPath,
+    state.preferences.onDemandBaseUrl,
+    state.preferences.gameDataSources,
+    state,
+    4
+  );
 
   // Load Playlists
 

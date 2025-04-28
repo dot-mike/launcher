@@ -34,6 +34,7 @@ type OwnProps = {
   onKeyDown: (event: React.KeyboardEvent<InputElement>) => void;
   onShowAllClick?: () => void;
   onContextMenu: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, playlistId: string) => void
+  onDownloadPlaylistContents: (playlistId: string) => void;
   onDuplicatePlaylist: (playlistId: string) => void;
   onExportPlaylist: (playlistId: string) => void;
 };
@@ -141,6 +142,7 @@ export class LeftBrowseSidebar extends React.Component<LeftBrowseSidebarProps> {
             onDiscard={this.props.onDiscard}
             onEdit={this.props.onEditClick}
             onDelete={this.props.onDelete}
+            onDownloadPlaylistContents={this.props.onDownloadPlaylistContents}
             onDuplicatePlaylist={this.props.onDuplicatePlaylist}
             onExportPlaylist={this.props.onExportPlaylist} />
         );

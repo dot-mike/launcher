@@ -21,6 +21,7 @@ import { FileServer } from './util/FileServer';
 import { FolderWatcher } from './util/FolderWatcher';
 import { LogFile } from './util/LogFile';
 import { PlatformAppPathSuggestions } from '@shared/curate/types';
+import { Downloader } from './Downloader';
 
 /** Contains most state for the back process. */
 export type BackState = {
@@ -32,6 +33,7 @@ export type BackState = {
   isDev: boolean;
   verbose: boolean;
   socketServer: SocketServer;
+  downloader: Downloader;
   fileServer: FileServer;
   fileServerPort: number;
   fileServerDownloads: {

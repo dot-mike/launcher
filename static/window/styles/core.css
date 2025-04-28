@@ -3661,9 +3661,9 @@ body {
 }
 
 .searchable-select-dropdown-results {
-  overflow-y: auto;
   height: 45vh;
   width: 22vw;
+  overflow: hidden;
 }
 
 .searchable-select-dropdown-item {
@@ -3700,4 +3700,26 @@ body {
 
 .platform-label-row > :not(:first-child) {
   margin-left: 0.3rem;
+}
+
+/* Downloads page */
+
+.downloads-page {
+  width: 100%;
+  height: 100%;
+}
+
+.downloads-page__upper {
+  margin: 1rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.downloads-page__workers {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.downloads-page__workers-worker {
+
 }

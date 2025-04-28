@@ -208,7 +208,6 @@ export async function genCurationWarnings(curation: LoadedCuration, fpPath: stri
         return s;
     }
   });
-  console.log(mutable.warnings);
   // Let extensions make changes
   await onWillGenCurationWarnings.fire(mutable);
 

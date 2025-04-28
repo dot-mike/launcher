@@ -209,11 +209,11 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     // Confirm first
     const confirmation = await this.props.openConfirmDialog(
       strings.dialog.areYouSure,
-      [strings.dialog.cancel, strings.misc.yes],
-      0,
+      [strings.misc.yes, strings.dialog.cancel],
+      1,
       1,
     );
-    if (confirmation === 1) {
+    if (confirmation === 0) {
       if (this.props.currentView.id === view) {
         // Must move to the home tab first!
         this.props.history.push(Paths.HOME);
@@ -257,13 +257,13 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         largeMessage: true,
         userCanCancel: false,
         message: message,
-        cancelId: 0,
+        cancelId: 1,
         fields,
-        buttons: ['Cancel', 'Confirm'],
+        buttons: ['Confirm', 'Cancel'],
       };
       this.props.mainActions.createDialog(dialog);
       window.Shared.dialogResEvent.once(dialog.id, (d: DialogState, value: number) => {
-        if (value === 1 && d.fields) {
+        if (value === 0 && d.fields) {
           const field = d.fields.find(f => f.name === 'name');
           if (field) {
             resolve(field.value as string);
@@ -377,6 +377,10 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                   link={Paths.CATEGORIES} />
               </>
             ) : undefined }
+            {/* <MenuItem
+              id={'header__downloads'}
+              title={'Downloads'}
+              link={Paths.DOWNLOADS} /> */}
             <MenuItem
               id={'header__logs'}
               title={strings.logs}
