@@ -1208,6 +1208,44 @@ export class App extends React.Component<AppProps> {
           click: () => {
             clipboard.writeText(gameId);
           }
+        },
+        {
+          /* Download Game */
+          label: strings.menu.downloadGame,
+          enabled: !window.Shared.isBackRemote, // (Local "back" only)
+          click: () => {
+            window.Shared.back.request(BackIn.GET_GAME, gameId)
+            .then((game) => {
+              if (game && game.activeDataId) {
+                window.Shared.back.request(BackIn.DOWNLOAD_GAME_DATA, game.activeDataId)
+                .then(() => {
+                  // Refresh the game data in the sidebar after successful download
+                  this.onUpdateActiveGameData(true, game.activeDataId);
+                })
+                .catch((error) => {
+                  console.error('Failed to download game:', error);
+                  const opts: Electron.MessageBoxOptions = {
+                    type: 'error',
+                    title: 'Download Failed',
+                    message: `Failed to download game: ${game.title}\nError: ${error.toString()}`,
+                    buttons: ['Ok'],
+                  };
+                  ipcRenderer.invoke(CustomIPC.SHOW_MESSAGE_BOX, opts);
+                });
+              } else {
+                const opts: Electron.MessageBoxOptions = {
+                  type: 'warning',
+                  title: 'Cannot Download',
+                  message: 'This game does not have downloadable content or the game data is not available.',
+                  buttons: ['Ok'],
+                };
+                ipcRenderer.invoke(CustomIPC.SHOW_MESSAGE_BOX, opts);
+              }
+            })
+            .catch((error) => {
+              console.error('Failed to get game info:', error);
+            });
+          }
         }, { type: 'separator' }, {
           /* File Location */
           label: strings.menu.openFileLocation,
