@@ -214,6 +214,21 @@ async function watchRenderer() {
   return ctx.watch();
 }
 
+async function watchLogger() {
+  const ctx = await esbuild.context({
+    bundle: true,
+    loader: { '.node': 'file' },
+    entryPoints: ['./src/renderer/logger.tsx'],
+    outdir: './build/window',
+    minify: false,
+    outExtension: {
+      '.js': '.bundle.js'
+    },
+    external: ['electron', ...require('module').builtinModules],
+  });
+  return ctx.watch();
+}
+
 function watchStatic() {
   gulp.watch(config.static.src + '/**/*', buildStatic);
 }
@@ -229,6 +244,20 @@ async function buildRenderer() {
     bundle: true,
     loader: { '.node': 'file' },
     entryPoints: ['./src/renderer/index.tsx'],
+    outdir: './build/window',
+    minify: true,
+    outExtension: {
+      '.js': '.bundle.js'
+    },
+    external: ['electron', ...require('module').builtinModules],
+  });
+}
+
+async function buildLogger() {
+  return esbuild.build({
+    bundle: true,
+    loader: { '.node': 'file' },
+    entryPoints: ['./src/renderer/logger.tsx'],
     outdir: './build/window',
     minify: true,
     outExtension: {
@@ -421,6 +450,7 @@ exports.build = series(
   parallel(
     buildBack,
     buildRenderer,
+    buildLogger,
     buildExtensions,
     buildStatic,
     configVersion
@@ -434,6 +464,7 @@ exports.watch = series(
   parallel(
     watchBack,
     watchRenderer,
+    watchLogger,
     watchExtensions,
     buildStatic,
     watchStatic

@@ -599,7 +599,7 @@ async function prepForInit(message: any): Promise<void> {
     tryListen();
 
     function onceListening() {
-      console.log('Back - Opened File Server');
+      console.log('Back - Opened File Server on Port ' + port);
       done(undefined);
     }
     function onError(error: Error) {
@@ -641,7 +641,7 @@ async function prepForInit(message: any): Promise<void> {
     return;
   }
 
-  console.log('Back - Opened Websocket');
+  console.log('Back - Opened Websocket on Port ' + state.socketServer.port);
 
   // Set up general Main message handler now
   process.on('message', onProcessMessage);
