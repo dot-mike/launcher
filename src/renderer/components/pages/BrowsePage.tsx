@@ -403,19 +403,28 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
 
   onGridGameSelect = async (gameId?: string, col?: number, row?: number): Promise<void> => {
     const { currentView } = this.props;
-    if (currentView.selectedGame?.id !== gameId && gameId) {
-      const game = await window.Shared.back.request(BackIn.GET_GAME, gameId);
-      if (game) {
-        if (col !== undefined && row !== undefined) {
-          this.props.searchActions.setGridScroll({
+    if (gameId) {
+      if (currentView.selectedGame?.id !== gameId) {
+        // Select a different game
+        const game = await window.Shared.back.request(BackIn.GET_GAME, gameId);
+        if (game) {
+          if (col !== undefined && row !== undefined) {
+            this.props.searchActions.setGridScroll({
+              view: currentView.id,
+              col,
+              row
+            });
+          }
+          this.props.searchActions.selectGame({
             view: currentView.id,
-            col,
-            row
+            game,
           });
         }
+      } else {
+        // Deselect the same game that's already selected
         this.props.searchActions.selectGame({
           view: currentView.id,
-          game,
+          game: undefined
         });
       }
     }
@@ -424,18 +433,27 @@ export class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState
 
   onListGameSelect = async (gameId?: string, row?: number): Promise<void> => {
     const { currentView } = this.props;
-    if (currentView.selectedGame?.id !== gameId && gameId) {
-      const game = await window.Shared.back.request(BackIn.GET_GAME, gameId);
-      if (game) {
-        if (row !== undefined) {
-          this.props.searchActions.setListScroll({
+    if (gameId) {
+      if (currentView.selectedGame?.id !== gameId) {
+        // Select a different game
+        const game = await window.Shared.back.request(BackIn.GET_GAME, gameId);
+        if (game) {
+          if (row !== undefined) {
+            this.props.searchActions.setListScroll({
+              view: currentView.id,
+              row
+            });
+          }
+          this.props.searchActions.selectGame({
             view: currentView.id,
-            row
+            game,
           });
         }
+      } else {
+        // Deselect the same game that's already selected
         this.props.searchActions.selectGame({
           view: currentView.id,
-          game,
+          game: undefined,
         });
       }
     }
